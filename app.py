@@ -1,33 +1,36 @@
 import json
-from datetime import date
-
 import boto3
 import streamlit as st
+from datetime import date
 
 
 # -----------------------------
 # Configuración
 # -----------------------------
 st.set_page_config(
-    page_title="AWS Lambda Trigger",
-    page_icon="☁️",
+    page_title="Generador de Reportes",
+    page_icon="🚕",
     layout="centered"
 )
 
 
 # -----------------------------
-# Estilos minimalistas
+# Estilos
 # -----------------------------
 st.markdown("""
 <style>
 
-/* Fondo */
+/* Fondo general */
 .stApp {
-    background-color: #f8fafc;
+    background: linear-gradient(
+        135deg,
+        #eef2ff,
+        #f8fafc
+    );
 }
 
 
-/* Contenedor principal */
+/* Contenedor */
 .block-container {
     max-width: 700px;
     padding-top: 3rem;
@@ -36,43 +39,45 @@ st.markdown("""
 
 /* Título */
 h1 {
-    color: #111827;
     text-align: center;
-    font-size: 36px;
+    color: #1e293b;
+    font-size: 38px;
     font-weight: 700;
 }
 
 
-/* Texto */
-.description {
-    text-align: center;
-    color: #6b7280;
-    font-size: 16px;
-    margin-bottom: 30px;
+/* Subtitulo */
+.subtitle {
+
+    text-align:center;
+    color:#64748b;
+    font-size:16px;
+    margin-bottom:30px;
+
 }
 
 
-/* Caja del formulario */
+/* Tarjeta */
 [data-testid="stVerticalBlockBorderWrapper"] {
 
-    background-color: white;
+    background:white;
 
-    border-radius: 16px;
+    padding:30px;
 
-    padding: 25px;
+    border-radius:18px;
 
-    border: 1px solid #e5e7eb;
+    border:1px solid #e2e8f0;
 
-    box-shadow: 
-        0 4px 12px rgba(0,0,0,0.05);
+    box-shadow:
+    0px 8px 25px rgba(15,23,42,0.08);
 
 }
 
 
-/* Inputs */
+/* Labels */
 label {
 
-    color:#374151 !important;
+    color:#334155 !important;
 
     font-weight:600 !important;
 
@@ -84,13 +89,15 @@ label {
 
     width:100%;
 
-    background-color:#2563eb;
+    height:48px;
+
+    border-radius:12px;
+
+    background:#2563eb;
 
     color:white;
 
-    border-radius:10px;
-
-    height:45px;
+    font-size:16px;
 
     font-weight:600;
 
@@ -101,17 +108,18 @@ label {
 
 .stButton button:hover {
 
-    background-color:#1d4ed8;
+    background:#1d4ed8;
 
 }
 
 
-/* Alertas */
-.stAlert {
+/* Separador */
+hr {
 
-    border-radius:10px;
+    border-color:#e2e8f0;
 
 }
+
 
 </style>
 """, unsafe_allow_html=True)
@@ -121,12 +129,12 @@ label {
 # -----------------------------
 # Encabezado
 # -----------------------------
-st.title("☁️ Ejecución AWS Lambda")
+st.title("🚕 Reporte de Taxis")
 
 st.markdown(
     """
-    <div class="description">
-    Selecciona la fecha y el color para enviar los parámetros al servicio.
+    <div class="subtitle">
+    Selecciona el periodo y el color del taxi para ejecutar el proceso.
     </div>
     """,
     unsafe_allow_html=True
@@ -139,21 +147,52 @@ st.markdown(
 # -----------------------------
 with st.container(border=True):
 
-    # Calendario
-    fecha = st.date_input(
-        "📅 Selecciona fecha",
-        value=date.today()
-    )
+
+    st.subheader("📅 Periodo")
 
 
-    # Extraer solamente mes y año
-    mes = fecha.month
-    anio = fecha.year
+    col1, col2 = st.columns(2)
 
 
-    # Color
+    meses = {
+        "Enero":1,
+        "Febrero":2,
+        "Marzo":3,
+        "Abril":4,
+        "Mayo":5,
+        "Junio":6,
+        "Julio":7,
+        "Agosto":8,
+        "Septiembre":9,
+        "Octubre":10,
+        "Noviembre":11,
+        "Diciembre":12
+    }
+
+
+    with col1:
+
+        mes_nombre = st.selectbox(
+            "Mes",
+            list(meses.keys()),
+            index=date.today().month-1
+        )
+
+
+    with col2:
+
+        anio = st.selectbox(
+            "Año",
+            list(range(2020,2031)),
+            index=list(range(2020,2031)).index(date.today().year)
+        )
+
+
+    st.divider()
+
+
     color = st.selectbox(
-        "🎨 Selecciona color",
+        "🎨 Color de taxi",
         [
             "Amarillo",
             "Verde"
@@ -169,16 +208,14 @@ with st.container(border=True):
 
         payload = {
 
-            "mes": mes,
+            "mes": meses[mes_nombre],
             "anio": anio,
-            "color": color.lower()
+            "color_taxi": color.lower()
 
         }
 
 
-        st.info(
-            "Enviando información a Lambda..."
-        )
+        st.info("Enviando datos a AWS Lambda...")
 
 
         try:
@@ -206,7 +243,7 @@ with st.container(border=True):
 
 
             st.success(
-                "Solicitud procesada correctamente"
+                "Proceso ejecutado correctamente"
             )
 
 
@@ -216,5 +253,5 @@ with st.container(border=True):
         except Exception as e:
 
             st.error(
-                f"Error: {e}"
+                f"Error ejecutando Lambda: {e}"
             )
