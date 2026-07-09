@@ -358,7 +358,7 @@ if st.button(
 
             "lambda",
 
-            region_name="us-east-1"
+            region_name="us-west-1"
 
         )
 
