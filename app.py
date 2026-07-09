@@ -20,66 +20,107 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* Fondo general */
+/* Fondo principal */
 .stApp {
     background: linear-gradient(
         135deg,
-        #eef2ff,
-        #f8fafc
+        #e0e7ff 0%,
+        #f8fafc 50%,
+        #dbeafe 100%
     );
 }
 
 
-/* Contenedor */
+/* Área de contenido */
 .block-container {
     max-width: 700px;
     padding-top: 3rem;
 }
 
 
-/* Título */
+/* Título principal */
 h1 {
     text-align: center;
-    color: #1e293b;
-    font-size: 38px;
-    font-weight: 700;
+    color: #0f172a;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -1px;
 }
 
 
-/* Subtitulo */
+/* Subtítulo */
 .subtitle {
-
-    text-align:center;
-    color:#64748b;
-    font-size:16px;
-    margin-bottom:30px;
-
+    text-align: center;
+    color: #334155;
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 35px;
 }
 
 
-/* Tarjeta */
+/* Tarjeta formulario */
 [data-testid="stVerticalBlockBorderWrapper"] {
 
-    background:white;
+    background: #ffffff;
 
-    padding:30px;
+    padding: 32px;
 
-    border-radius:18px;
+    border-radius: 20px;
 
-    border:1px solid #e2e8f0;
+    border: 1px solid #cbd5e1;
 
     box-shadow:
-    0px 8px 25px rgba(15,23,42,0.08);
+        0 10px 30px rgba(15,23,42,0.12);
 
 }
 
 
-/* Labels */
+/* Subtítulos dentro de la tarjeta */
+h2, h3 {
+
+    color:#0f172a !important;
+
+    font-weight:700 !important;
+
+}
+
+
+/* Texto general */
+p {
+
+    color:#334155;
+
+}
+
+
+/* Labels de inputs */
 label {
 
-    color:#334155 !important;
+    color:#1e293b !important;
 
-    font-weight:600 !important;
+    font-weight:700 !important;
+
+    font-size:15px !important;
+
+}
+
+
+/* Selectores */
+div[data-baseweb="select"] > div {
+
+    background-color:#ffffff;
+
+    border:1px solid #94a3b8;
+
+    border-radius:10px;
+
+}
+
+
+/* Texto dentro de select */
+div[data-baseweb="select"] span {
+
+    color:#0f172a !important;
 
 }
 
@@ -89,7 +130,7 @@ label {
 
     width:100%;
 
-    height:48px;
+    height:50px;
 
     border-radius:12px;
 
@@ -97,11 +138,13 @@ label {
 
     color:white;
 
-    font-size:16px;
+    font-size:17px;
 
-    font-weight:600;
+    font-weight:700;
 
     border:none;
+
+    transition:0.2s;
 
 }
 
@@ -110,13 +153,23 @@ label {
 
     background:#1d4ed8;
 
+    transform:translateY(-1px);
+
 }
 
 
-/* Separador */
+/* Mensajes */
+.stAlert {
+
+    border-radius:12px;
+
+}
+
+
+/* Línea divisoria */
 hr {
 
-    border-color:#e2e8f0;
+    border-color:#cbd5e1;
 
 }
 
