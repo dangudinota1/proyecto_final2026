@@ -5,9 +5,9 @@ import boto3
 import streamlit as st
 
 
-# -----------------------------
-# Configuración
-# -----------------------------
+# ---------------------------------
+# Configuración de la aplicación
+# ---------------------------------
 st.set_page_config(
     page_title="Reporte de Taxis",
     page_icon="🚕",
@@ -15,180 +15,166 @@ st.set_page_config(
 )
 
 
-# -----------------------------
-# Estilos
-# -----------------------------
-st.markdown("""
-<style>
+# ---------------------------------
+# Bootstrap + estilos personalizados
+# ---------------------------------
+st.markdown(
+    """
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet">
 
-/* Fondo principal */
-.stApp {
-    background: linear-gradient(
-        135deg,
-        #e2e8f0 0%,
-        #f8fafc 50%,
-        #dbeafe 100%
-    );
-}
+    <style>
 
+    /* Fondo */
+    .stApp {
+        background:
+        linear-gradient(
+            135deg,
+            #e2e8f0,
+            #f8fafc
+        );
+    }
 
-/* Contenedor */
-.block-container {
-    max-width: 700px;
-    padding-top: 3rem;
-}
 
+    /* Contenedor */
+    .block-container {
 
-/* Título */
-h1 {
-    text-align: center;
-    color: #020617 !important;
-    font-size: 42px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    text-shadow: 0px 2px 4px rgba(0,0,0,0.15);
-}
+        max-width:720px;
 
+        padding-top:3rem;
 
-/* Subtitulo */
-.subtitle {
-    text-align: center;
-    color: #334155 !important;
-    font-size: 17px;
-    font-weight: 600;
-    margin-bottom: 35px;
-}
+    }
 
 
-/* Tarjeta */
-[data-testid="stVerticalBlockBorderWrapper"] {
+    /* Título */
+    .main-title {
 
-    background: #ffffff;
+        text-align:center;
 
-    padding: 32px;
+        color:#020617;
 
-    border-radius: 20px;
+        font-size:42px;
 
-    border: 1px solid #cbd5e1;
+        font-weight:800;
 
-    box-shadow:
-        0 10px 30px rgba(15,23,42,0.12);
+        margin-bottom:10px;
 
-}
+    }
 
 
-/* Encabezados internos */
-h2, h3 {
+    /* Descripción */
+    .subtitle {
 
-    color:#0f172a !important;
+        text-align:center;
 
-    font-weight:700 !important;
+        color:#334155;
 
-}
+        font-size:17px;
 
+        margin-bottom:35px;
 
-/* Texto */
-p {
+    }
 
-    color:#334155;
 
-}
+    /* Card */
+    .card-custom {
 
+        background:white;
 
-/* Labels */
-label {
+        border-radius:20px;
 
-    color:#1e293b !important;
+        padding:35px;
 
-    font-weight:700 !important;
+        box-shadow:
+        0 10px 25px rgba(15,23,42,.12);
 
-    font-size:15px !important;
+        border:
+        1px solid #cbd5e1;
 
-}
+    }
 
 
-/* Selectores */
-div[data-baseweb="select"] > div {
+    /* Labels */
+    label {
 
-    background:white;
+        color:#0f172a !important;
 
-    border:1px solid #94a3b8;
+        font-weight:700 !important;
 
-    border-radius:10px;
+    }
 
-}
 
+    /* Selectores */
+    div[data-baseweb="select"] > div {
 
-/* Texto de select */
-div[data-baseweb="select"] span {
+        background:white;
 
-    color:#0f172a !important;
+        border-radius:10px;
 
-}
+        border:1px solid #94a3b8;
 
+    }
 
-/* Botón */
-.stButton button {
 
-    width:100%;
+    /* Botón */
+    .stButton button {
 
-    height:50px;
+        width:100%;
 
-    border-radius:12px;
+        height:50px;
 
-    background:#2563eb;
+        border-radius:12px;
 
-    color:white;
+        background:#2563eb;
 
-    font-size:17px;
+        color:white;
 
-    font-weight:700;
+        font-weight:700;
 
-    border:none;
+        font-size:17px;
 
-    transition:0.2s;
+        border:none;
 
-}
+    }
 
 
-.stButton button:hover {
+    .stButton button:hover {
 
-    background:#1d4ed8;
+        background:#1d4ed8;
 
-    transform:translateY(-1px);
+        color:white;
 
-}
+    }
 
 
-/* Alertas */
-.stAlert {
+    /* Alertas */
 
-    border-radius:12px;
+    .stAlert {
 
-}
+        border-radius:12px;
 
+    }
 
-/* Separador */
-hr {
 
-    border-color:#cbd5e1;
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-}
 
-</style>
-""", unsafe_allow_html=True)
 
-
-
-# -----------------------------
-# Título
-# -----------------------------
-st.title("🚕 Reporte de Taxis")
+# ---------------------------------
+# Encabezado
+# ---------------------------------
 
 st.markdown(
     """
+    <div class="main-title">
+        🚕 Reporte de Taxis
+    </div>
+
     <div class="subtitle">
-    Selecciona el periodo y el color del taxi para ejecutar el proceso.
+        Selecciona el periodo y el color del taxi para ejecutar el proceso.
     </div>
     """,
     unsafe_allow_html=True
@@ -196,115 +182,160 @@ st.markdown(
 
 
 
-# -----------------------------
+# ---------------------------------
 # Formulario
-# -----------------------------
-with st.container(border=True):
+# ---------------------------------
 
-    st.subheader("📅 Periodo")
-
-
-    meses = {
-        "Enero": 1,
-        "Febrero": 2,
-        "Marzo": 3,
-        "Abril": 4,
-        "Mayo": 5,
-        "Junio": 6,
-        "Julio": 7,
-        "Agosto": 8,
-        "Septiembre": 9,
-        "Octubre": 10,
-        "Noviembre": 11,
-        "Diciembre": 12
-    }
+st.markdown(
+    """
+    <div class="card-custom">
+    """,
+    unsafe_allow_html=True
+)
 
 
-    col1, col2 = st.columns(2)
+st.markdown(
+    """
+    <h4 style="color:#020617;">
+        📅 Periodo
+    </h4>
+    """,
+    unsafe_allow_html=True
+)
 
 
-    with col1:
 
-        mes_nombre = st.selectbox(
-            "Mes",
-            list(meses.keys()),
-            index=date.today().month - 1
-        )
-
-
-    with col2:
-
-        anio = st.selectbox(
-            "Año",
-            list(range(2024, 2031)),
-            index=list(range(2024, 2031)).index(date.today().year)
-        )
-
-
-    st.divider()
+meses = {
+    "Enero":1,
+    "Febrero":2,
+    "Marzo":3,
+    "Abril":4,
+    "Mayo":5,
+    "Junio":6,
+    "Julio":7,
+    "Agosto":8,
+    "Septiembre":9,
+    "Octubre":10,
+    "Noviembre":11,
+    "Diciembre":12
+}
 
 
-    color = st.selectbox(
-        "🎨 Color de taxi",
-        [
-            "Amarillo",
-            "Verde"
-        ]
+
+col1, col2 = st.columns(2)
+
+
+with col1:
+
+    mes_nombre = st.selectbox(
+        "Mes",
+        list(meses.keys()),
+        index=date.today().month-1
     )
 
 
-    st.write("")
+with col2:
+
+    anio = st.selectbox(
+        "Año",
+        list(range(2024,2031)),
+        index=list(range(2024,2031)).index(date.today().year)
+    )
 
 
-    if st.button("Enviar parámetros"):
+
+st.divider()
 
 
-        payload = {
 
-            "mes": meses[mes_nombre],
-            "anio": anio,
-            "color_taxi": color.lower()
-
-        }
-
-
-        st.info("Enviando información a AWS Lambda...")
+color = st.selectbox(
+    "🎨 Color de taxi",
+    [
+        "Amarillo",
+        "Verde"
+    ]
+)
 
 
-        try:
 
-            lambda_client = boto3.client(
-                "lambda",
-                region_name="us-east-1"
-            )
+st.write("")
 
 
-            response = lambda_client.invoke(
 
-                FunctionName="NOMBRE_DE_TU_LAMBDA",
+# ---------------------------------
+# Lambda
+# ---------------------------------
 
-                InvocationType="RequestResponse",
-
-                Payload=json.dumps(payload)
-
-            )
+if st.button("🚀 Ejecutar Lambda"):
 
 
-            resultado = json.loads(
-                response["Payload"].read()
-            )
+    payload = {
+
+        "mes": meses[mes_nombre],
+
+        "anio": anio,
+
+        "color_taxi": color.lower()
+
+    }
 
 
-            st.success(
-                "Proceso ejecutado correctamente"
-            )
+    st.info(
+        "Enviando parámetros a AWS Lambda..."
+    )
 
 
-            st.json(resultado)
+    try:
 
 
-        except Exception as e:
+        lambda_client = boto3.client(
 
-            st.error(
-                f"Error ejecutando Lambda: {e}"
-            )
+            "lambda",
+
+            region_name="us-east-1"
+
+        )
+
+
+        response = lambda_client.invoke(
+
+            FunctionName="NOMBRE_DE_TU_LAMBDA",
+
+            InvocationType="RequestResponse",
+
+            Payload=json.dumps(payload)
+
+        )
+
+
+        resultado = json.loads(
+
+            response["Payload"].read()
+
+        )
+
+
+        st.success(
+            "Proceso ejecutado correctamente"
+        )
+
+
+        st.json(resultado)
+
+
+
+    except Exception as e:
+
+
+        st.error(
+            f"Error ejecutando Lambda: {e}"
+        )
+
+
+
+st.markdown(
+    """
+    </div>
+    """,
+    unsafe_allow_html=True
+)
