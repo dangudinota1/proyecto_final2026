@@ -1,14 +1,15 @@
 import json
+from datetime import date
+
 import boto3
 import streamlit as st
-from datetime import date
 
 
 # -----------------------------
 # Configuración
 # -----------------------------
 st.set_page_config(
-    page_title="Generador de Reportes",
+    page_title="Reporte de Taxis",
     page_icon="🚕",
     layout="centered"
 )
@@ -24,41 +25,42 @@ st.markdown("""
 .stApp {
     background: linear-gradient(
         135deg,
-        #e0e7ff 0%,
+        #e2e8f0 0%,
         #f8fafc 50%,
         #dbeafe 100%
     );
 }
 
 
-/* Área de contenido */
+/* Contenedor */
 .block-container {
     max-width: 700px;
     padding-top: 3rem;
 }
 
 
-/* Título principal */
+/* Título */
 h1 {
     text-align: center;
-    color: #0f172a;
-    font-size: 40px;
+    color: #020617 !important;
+    font-size: 42px;
     font-weight: 800;
     letter-spacing: -1px;
+    text-shadow: 0px 2px 4px rgba(0,0,0,0.15);
 }
 
 
-/* Subtítulo */
+/* Subtitulo */
 .subtitle {
     text-align: center;
-    color: #334155;
+    color: #334155 !important;
     font-size: 17px;
-    font-weight: 500;
+    font-weight: 600;
     margin-bottom: 35px;
 }
 
 
-/* Tarjeta formulario */
+/* Tarjeta */
 [data-testid="stVerticalBlockBorderWrapper"] {
 
     background: #ffffff;
@@ -75,7 +77,7 @@ h1 {
 }
 
 
-/* Subtítulos dentro de la tarjeta */
+/* Encabezados internos */
 h2, h3 {
 
     color:#0f172a !important;
@@ -85,7 +87,7 @@ h2, h3 {
 }
 
 
-/* Texto general */
+/* Texto */
 p {
 
     color:#334155;
@@ -93,7 +95,7 @@ p {
 }
 
 
-/* Labels de inputs */
+/* Labels */
 label {
 
     color:#1e293b !important;
@@ -108,7 +110,7 @@ label {
 /* Selectores */
 div[data-baseweb="select"] > div {
 
-    background-color:#ffffff;
+    background:white;
 
     border:1px solid #94a3b8;
 
@@ -117,7 +119,7 @@ div[data-baseweb="select"] > div {
 }
 
 
-/* Texto dentro de select */
+/* Texto de select */
 div[data-baseweb="select"] span {
 
     color:#0f172a !important;
@@ -158,7 +160,7 @@ div[data-baseweb="select"] span {
 }
 
 
-/* Mensajes */
+/* Alertas */
 .stAlert {
 
     border-radius:12px;
@@ -166,13 +168,12 @@ div[data-baseweb="select"] span {
 }
 
 
-/* Línea divisoria */
+/* Separador */
 hr {
 
     border-color:#cbd5e1;
 
 }
-
 
 </style>
 """, unsafe_allow_html=True)
@@ -180,7 +181,7 @@ hr {
 
 
 # -----------------------------
-# Encabezado
+# Título
 # -----------------------------
 st.title("🚕 Reporte de Taxis")
 
@@ -200,27 +201,26 @@ st.markdown(
 # -----------------------------
 with st.container(border=True):
 
-
     st.subheader("📅 Periodo")
 
 
-    col1, col2 = st.columns(2)
-
-
     meses = {
-        "Enero":1,
-        "Febrero":2,
-        "Marzo":3,
-        "Abril":4,
-        "Mayo":5,
-        "Junio":6,
-        "Julio":7,
-        "Agosto":8,
-        "Septiembre":9,
-        "Octubre":10,
-        "Noviembre":11,
-        "Diciembre":12
+        "Enero": 1,
+        "Febrero": 2,
+        "Marzo": 3,
+        "Abril": 4,
+        "Mayo": 5,
+        "Junio": 6,
+        "Julio": 7,
+        "Agosto": 8,
+        "Septiembre": 9,
+        "Octubre": 10,
+        "Noviembre": 11,
+        "Diciembre": 12
     }
+
+
+    col1, col2 = st.columns(2)
 
 
     with col1:
@@ -228,7 +228,7 @@ with st.container(border=True):
         mes_nombre = st.selectbox(
             "Mes",
             list(meses.keys()),
-            index=date.today().month-1
+            index=date.today().month - 1
         )
 
 
@@ -236,8 +236,8 @@ with st.container(border=True):
 
         anio = st.selectbox(
             "Año",
-            list(range(2020,2031)),
-            index=list(range(2020,2031)).index(date.today().year)
+            list(range(2024, 2031)),
+            index=list(range(2024, 2031)).index(date.today().year)
         )
 
 
@@ -268,7 +268,7 @@ with st.container(border=True):
         }
 
 
-        st.info("Enviando datos a AWS Lambda...")
+        st.info("Enviando información a AWS Lambda...")
 
 
         try:
