@@ -366,7 +366,7 @@ if st.button(
 
         response = lambda_client.invoke(
 
-            FunctionName="NOMBRE_DE_TU_LAMBDA",
+            FunctionName="xideral_daniel_lambda_proyectofinal2026 ",
 
             InvocationType="RequestResponse",
 
