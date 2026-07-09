@@ -6,126 +6,110 @@ import streamlit as st
 
 
 # -----------------------------
-# Configuración página
+# Configuración
 # -----------------------------
 st.set_page_config(
-    page_title="Generador de Reportes AWS",
-    page_icon="🚀",
+    page_title="AWS Lambda Trigger",
+    page_icon="☁️",
     layout="centered"
 )
 
 
 # -----------------------------
-# CSS personalizado
+# Estilos minimalistas
 # -----------------------------
 st.markdown("""
 <style>
 
-/* Fondo general */
+/* Fondo */
 .stApp {
-    background: linear-gradient(
-        135deg,
-        #0f172a,
-        #1e3a8a,
-        #2563eb
-    );
-}
-
-/* Ocultar menú y footer */
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
+    background-color: #f8fafc;
 }
 
 
-/* Título */
-.title {
-    color: white;
-    text-align: center;
-    font-size: 45px;
-    font-weight: 800;
-    margin-bottom: 10px;
-}
-
-
-/* Subtitulo */
-.subtitle {
-    color: #dbeafe;
-    text-align: center;
-    font-size: 20px;
-    margin-bottom: 35px;
-}
-
-
-/* Caja principal */
+/* Contenedor principal */
 .block-container {
+    max-width: 700px;
     padding-top: 3rem;
 }
 
 
-/* Card del formulario */
+/* Título */
+h1 {
+    color: #111827;
+    text-align: center;
+    font-size: 36px;
+    font-weight: 700;
+}
+
+
+/* Texto */
+.description {
+    text-align: center;
+    color: #6b7280;
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+
+/* Caja del formulario */
 [data-testid="stVerticalBlockBorderWrapper"] {
 
-    background: rgba(255,255,255,0.95);
-    border-radius: 20px;
-    padding: 30px;
-    box-shadow:
-        0px 10px 30px rgba(0,0,0,0.35);
+    background-color: white;
+
+    border-radius: 16px;
+
+    padding: 25px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 
+        0 4px 12px rgba(0,0,0,0.05);
 
 }
 
 
-/* Labels */
+/* Inputs */
 label {
-    font-weight: 700 !important;
-    color: #1e293b !important;
+
+    color:#374151 !important;
+
+    font-weight:600 !important;
+
 }
 
 
 /* Botón */
 .stButton button {
 
-    width: 100%;
-    height: 55px;
+    width:100%;
 
-    background: linear-gradient(
-        90deg,
-        #22c55e,
-        #16a34a
-    );
+    background-color:#2563eb;
 
     color:white;
-    font-size:20px;
-    font-weight:bold;
 
-    border-radius:15px;
+    border-radius:10px;
+
+    height:45px;
+
+    font-weight:600;
+
     border:none;
-
-    transition:0.3s;
 
 }
 
 
 .stButton button:hover {
 
-    background: linear-gradient(
-        90deg,
-        #16a34a,
-        #15803d
-    );
-
-    transform: scale(1.02);
+    background-color:#1d4ed8;
 
 }
 
 
-/* Mensajes */
+/* Alertas */
 .stAlert {
 
-    border-radius:15px;
+    border-radius:10px;
 
 }
 
@@ -133,18 +117,16 @@ label {
 """, unsafe_allow_html=True)
 
 
+
 # -----------------------------
 # Encabezado
 # -----------------------------
-st.markdown(
-    "<div class='title'>🚀 Generador de Reportes AWS</div>",
-    unsafe_allow_html=True
-)
+st.title("☁️ Ejecución AWS Lambda")
 
 st.markdown(
     """
-    <div class='subtitle'>
-    Selecciona los parámetros y envía la información a AWS Lambda
+    <div class="description">
+    Selecciona la fecha y el color para enviar los parámetros al servicio.
     </div>
     """,
     unsafe_allow_html=True
@@ -157,45 +139,24 @@ st.markdown(
 # -----------------------------
 with st.container(border=True):
 
-    col1, col2 = st.columns(2)
+    # Calendario
+    fecha = st.date_input(
+        "📅 Selecciona fecha",
+        value=date.today()
+    )
 
 
-    with col1:
-
-        mes = st.selectbox(
-            "📅 Selecciona el mes",
-            [
-                "Enero",
-                "Febrero",
-                "Marzo",
-                "Abril",
-                "Mayo",
-                "Junio",
-                "Julio",
-                "Agosto",
-                "Septiembre",
-                "Octubre",
-                "Noviembre",
-                "Diciembre"
-            ],
-            index=date.today().month-1
-        )
+    # Extraer solamente mes y año
+    mes = fecha.month
+    anio = fecha.year
 
 
-    with col2:
-
-        anio = st.selectbox(
-            "🗓 Selecciona el año",
-            list(range(2024,2031)),
-            index=2
-        )
-
-
+    # Color
     color = st.selectbox(
-        "🎨 Selecciona color del reporte",
+        "🎨 Selecciona color",
         [
-            "🟡 Amarillo",
-            "🟢 Verde"
+            "Amarillo",
+            "Verde"
         ]
     )
 
@@ -203,19 +164,21 @@ with st.container(border=True):
     st.write("")
 
 
-    if st.button("🚀 Ejecutar Lambda"):
+    if st.button("Enviar parámetros"):
 
 
         payload = {
 
             "mes": mes,
             "anio": anio,
-            "color": color.split(" ")[1].lower()
+            "color": color.lower()
 
         }
 
 
-        st.info("Procesando solicitud...")
+        st.info(
+            "Enviando información a Lambda..."
+        )
 
 
         try:
@@ -237,21 +200,21 @@ with st.container(border=True):
             )
 
 
-            result = json.loads(
+            resultado = json.loads(
                 response["Payload"].read()
             )
 
 
             st.success(
-                "✅ Lambda ejecutada correctamente"
+                "Solicitud procesada correctamente"
             )
 
 
-            st.json(result)
+            st.json(resultado)
 
 
         except Exception as e:
 
             st.error(
-                f"❌ Error ejecutando Lambda: {e}"
+                f"Error: {e}"
             )
