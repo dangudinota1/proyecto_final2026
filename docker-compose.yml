@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  streamlit:
+    build: .
+    container_name: taxi_dashboard
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env_file
+    restart: unless-stopped
