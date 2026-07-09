@@ -366,7 +366,7 @@ if st.button(
 
         response = lambda_client.invoke(
 
-            FunctionName="xideral_daniel_lambda_proyectofinal2026 ",
+            FunctionName="arn:aws:lambda:us-west-1:020635523025:function:xideral_daniel_lambda_proyectofinal2026",
 
             InvocationType="RequestResponse",
 
