@@ -190,14 +190,20 @@ unsafe_allow_html=True
 
 st.markdown(
     """
-    <div class="navbar-custom">
-        <div class="navbar-title">
+    <div style="
+        background:#0f172a;
+        padding:20px;
+        border-radius:18px;
+        margin-bottom:30px;
+        box-shadow:0 8px 20px rgba(0,0,0,.15);
+    ">
+        <h2 style="color:white;margin:0;">
             🚕 Taxi Analytics Platform
-        </div>
+        </h2>
 
-        <div class="navbar-text">
+        <span style="color:#cbd5e1;">
             AWS Lambda Report Generator
-        </div>
+        </span>
     </div>
     """,
     unsafe_allow_html=True
