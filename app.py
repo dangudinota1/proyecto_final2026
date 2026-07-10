@@ -3,10 +3,55 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 import os
 import urllib.request
+import sys
+import subprocess
 
 import boto3
 import streamlit as st
 import pandas as pd
+
+# =====================================
+# VERIFICAR Y INSTALAR PYSPARK
+# =====================================
+def ensure_pyspark():
+    """Verifica que pyspark está instalado, si no, lo instala."""
+    try:
+        import pyspark
+        return True
+    except ImportError:
+        st.warning("⚠️ pyspark no está instalado. Intentando instalar...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pyspark"])
+            st.success("✅ pyspark instalado correctamente")
+            return True
+        except Exception as e:
+            st.error(f"❌ No se pudo instalar pyspark: {e}")
+            st.error("Por favor instala pyspark manualmente: pip install pyspark")
+            return False
+
+# =====================================
+# CONFIGURACIÓN DE SPARK
+# =====================================
+# Asegurar que Spark usa el Python correcto
+os.environ["PYSPARK_PYTHON"] = sys.executable
+os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+
+# Configurar JAVA_HOME si es necesario
+java_home = os.environ.get("JAVA_HOME", "")
+if not java_home:
+    # Buscar Java en ubicaciones comunes
+    java_paths = [
+        "/usr/lib/jvm/java-11-openjdk-amd64",
+        "/usr/lib/jvm/java-11-openjdk-arm64",
+        "/usr/lib/jvm/java-11-openjdk",
+        "/usr/lib/jvm/default-java",
+        "/usr/lib/jvm/java-8-openjdk-amd64",
+        "/usr/lib/jvm/java-8-openjdk",
+    ]
+    for path in java_paths:
+        if Path(path).exists():
+            os.environ["JAVA_HOME"] = path
+            break
 
 # =====================================
 # CONFIGURACIÓN DE S3
@@ -74,7 +119,6 @@ def download_kpis_from_s3() -> bool:
     """Descarga el JSON de KPIs desde S3."""
     try:
         if LOCAL_KPIS_PATH.exists() and LOCAL_KPIS_PATH.stat().st_size > 0:
-            st.info(f"✅ KPIs ya existen localmente")
             return True
         
         with st.spinner("Descargando KPIs desde S3..."):
@@ -89,13 +133,17 @@ def download_kpis_from_s3() -> bool:
 # =====================================
 # FUNCIONES DE PROCESAMIENTO CON SPARK
 # =====================================
-def process_with_spark():
-    """Procesa el archivo Parquet con Spark y genera KPIs."""
+@st.cache_resource
+def get_spark_session():
+    """Obtiene o crea una sesión de Spark cacheada."""
     try:
-        from pyspark.sql import SparkSession, functions as F
-        from pyspark.sql.types import NumericType
+        # Verificar que pyspark está instalado
+        if not ensure_pyspark():
+            return None
+            
+        from pyspark.sql import SparkSession
         
-        # Crear SparkSession
+        # Configurar directorios temporales
         HOME = Path.home()
         SPARK_TMP = HOME / "spark-tmp"
         JAVA_TMP = HOME / "spark-tmp" / "java"
@@ -103,20 +151,19 @@ def process_with_spark():
         for path in [SPARK_TMP, JAVA_TMP]:
             path.mkdir(parents=True, exist_ok=True)
         
+        # Variables de entorno para Spark
         os.environ["TMPDIR"] = str(SPARK_TMP)
         os.environ["TEMP"] = str(SPARK_TMP)
         os.environ["TMP"] = str(SPARK_TMP)
         os.environ["SPARK_LOCAL_DIRS"] = str(SPARK_TMP)
         os.environ["_JAVA_OPTIONS"] = f"-Djava.io.tmpdir={JAVA_TMP}"
         
-        try:
-            spark.stop()
-        except Exception:
-            pass
+        st.info("🔄 Inicializando Spark...")
         
+        # Crear SparkSession
         spark = (
             SparkSession.builder
-            .appName("nyc-taxi-kpis")
+            .appName("nyc-taxi-kpis-streamlit")
             .master("local[*]")
             .config("spark.hadoop.fs.defaultFS", "file:///")
             .config("spark.sql.warehouse.dir", f"file://{HOME / 'spark-warehouse'}")
@@ -124,10 +171,45 @@ def process_with_spark():
             .config("spark.driver.extraJavaOptions", f"-Djava.io.tmpdir={JAVA_TMP}")
             .config("spark.executor.extraJavaOptions", f"-Djava.io.tmpdir={JAVA_TMP}")
             .config("spark.sql.shuffle.partitions", "8")
+            .config("spark.ui.enabled", "false")
+            .config("spark.sql.adaptive.enabled", "false")
             .getOrCreate()
         )
         
         spark.sparkContext.setLogLevel("WARN")
+        st.success("✅ Spark inicializado correctamente")
+        return spark
+        
+    except Exception as e:
+        st.error(f"❌ Error al crear SparkSession: {e}")
+        st.error("""
+        Posibles soluciones:
+        1. Instala pyspark: pip install pyspark
+        2. Verifica que Java está instalado: java -version
+        3. Si estás en Docker, asegura que Java está instalado
+        """)
+        return None
+
+def process_with_spark():
+    """Procesa el archivo Parquet con Spark y genera KPIs."""
+    try:
+        # Verificar que pyspark está instalado
+        if not ensure_pyspark():
+            return False
+            
+        from pyspark.sql import functions as F
+        from pyspark.sql.types import NumericType
+        
+        # Obtener SparkSession cacheada
+        spark = get_spark_session()
+        if spark is None:
+            return False
+        
+        # Verificar que el archivo existe
+        if not LOCAL_PARQUET.exists():
+            st.error(f"❌ Archivo Parquet no encontrado: {LOCAL_PARQUET}")
+            st.info("Por favor, descarga el archivo primero usando el botón de descarga.")
+            return False
         
         # Leer el Parquet
         with st.spinner("Leyendo archivo Parquet con Spark..."):
@@ -316,7 +398,6 @@ def process_with_spark():
                 )
                 st.success("✅ KPIs subidos a S3")
             
-            spark.stop()
             return True
             
     except Exception as e:
@@ -331,7 +412,7 @@ def process_with_spark():
 st.set_page_config(
     page_title="Taxi Analytics",
     page_icon="🚕",
-    layout="centered"
+    layout="wide"
 )
 
 # =====================================
@@ -348,7 +429,7 @@ rel="stylesheet">
     background: linear-gradient(120deg, #f1f5f9, #dbeafe);
 }
 .block-container {
-    max-width: 1100px;
+    max-width: 1200px;
     padding-top: 2rem;
 }
 .navbar-custom {
@@ -447,7 +528,7 @@ unsafe_allow_html=True
 )
 
 # =====================================
-# CARDS PRINCIPALES
+# TABS
 # =====================================
 tab1, tab2 = st.tabs(["📊 Dashboard KPIs", "⚙️ Procesar Datos"])
 
@@ -464,7 +545,7 @@ with tab1:
     unsafe_allow_html=True
     )
     
-    # Intentar cargar KPIs desde S3 o local
+    # Intentar cargar KPIs
     kpis_loaded = False
     
     # Primero intentar cargar desde S3
@@ -476,7 +557,6 @@ with tab1:
         except Exception as e:
             st.warning(f"⚠️ No se pudieron cargar KPIs locales: {e}")
     
-    # Si no hay KPIs, mostrar mensaje
     if not kpis_loaded:
         st.info("📊 No hay KPIs disponibles. Ve a la pestaña 'Procesar Datos' para generarlos.")
     else:
@@ -531,7 +611,7 @@ with tab1:
         
         st.markdown("---")
         
-        # KPIs por día - Gráfico
+        # KPIs por día
         st.subheader("📊 Viajes por Día")
         df_dia = pd.DataFrame(kpis["kpi_por_dia"])
         st.line_chart(df_dia.set_index("pickup_date")["trips"])
@@ -541,7 +621,7 @@ with tab1:
         df_hora = pd.DataFrame(kpis["kpi_por_hora"])
         st.bar_chart(df_hora.set_index("pickup_hour")["trips"])
         
-        # Top zonas de recogida
+        # Top zonas
         st.subheader("📍 Top 10 Zonas de Recogida")
         df_zones = pd.DataFrame(kpis["kpi_top_pickup_zones"]).head(10)
         st.dataframe(
@@ -556,7 +636,7 @@ with tab1:
             }
         )
         
-        # KPIs por tipo de pago
+        # Tipo de pago
         st.subheader("💳 Tipo de Pago")
         df_pago = pd.DataFrame(kpis["kpi_tipo_pago"])
         st.dataframe(
@@ -571,7 +651,7 @@ with tab1:
             }
         )
         
-        # Calidad de datos
+        # Calidad
         st.subheader("📊 Calidad de Datos")
         df_calidad = pd.DataFrame(kpis["kpi_calidad"])
         st.dataframe(
@@ -602,6 +682,42 @@ with tab2:
     3. 📊 Cálculo de KPIs
     4. ☁️ Subida de resultados a S3
     """)
+    
+    # Verificar dependencias
+    st.subheader("🔍 Verificación de dependencias")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Verificar pyspark
+        try:
+            import pyspark
+            st.success("✅ pyspark")
+        except ImportError:
+            st.error("❌ pyspark no instalado")
+            if st.button("Instalar pyspark"):
+                with st.spinner("Instalando pyspark..."):
+                    subprocess.check_call([sys.executable, "-m", "pip", "install", "pyspark"])
+                st.success("✅ pyspark instalado")
+                st.rerun()
+    
+    with col2:
+        # Verificar boto3
+        try:
+            import boto3
+            st.success("✅ boto3")
+        except ImportError:
+            st.error("❌ boto3 no instalado")
+    
+    with col3:
+        # Verificar pandas
+        try:
+            import pandas
+            st.success("✅ pandas")
+        except ImportError:
+            st.error("❌ pandas no instalado")
+    
+    st.write("")
     
     # Período
     meses = {
@@ -701,7 +817,7 @@ st.markdown(
     font-size: 12px;
     border-top: 1px solid #e2e8f0;
 ">
-    🚕 Taxi Analytics Platform v2.0 | AWS + Streamlit
+    🚕 Taxi Analytics Platform v2.0 | AWS + Streamlit + Spark
 </div>
 """,
 unsafe_allow_html=True
