@@ -189,20 +189,18 @@ unsafe_allow_html=True
 # =====================================
 
 st.markdown(
-"""
-<div class="navbar-custom">
+    """
+    <div class="navbar-custom">
+        <div class="navbar-title">
+            🚕 Taxi Analytics Platform
+        </div>
 
-    <div class="navbar-title">
-        🚕 Taxi Analytics Platform
+        <div class="navbar-text">
+            AWS Lambda Report Generator
+        </div>
     </div>
-
-    <div class="navbar-text">
-        AWS Lambda Report Generator
-    </div>
-
-</div>
-""",
-unsafe_allow_html=True
+    """,
+    unsafe_allow_html=True
 )
 
 
