@@ -8,4 +8,15 @@ services:
       - "8501:8501"
     env_file:
       - .env
+    environment:
+      - PYSPARK_PYTHON=python3
+      - PYSPARK_DRIVER_PYTHON=python3
+      - JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+      - SPARK_LOCAL_DIRS=/app/spark-tmp
+      - TMPDIR=/app/spark-tmp
+    volumes:
+      - ./data:/app/data
+      - ./kpis:/app/kpis
+      - ./spark-tmp:/app/spark-tmp
+      - ./spark-warehouse:/app/spark-warehouse
     restart: unless-stopped
